@@ -11,7 +11,7 @@ rm -f /lib/systemd/system/anaconda.target.wants/*;
 COPY ./configs/* /tmp/
 RUN echo root:Hashdata@123 | chpasswd \
         && yum install -y initscripts unzip which tar more less net-tools util-linux-ng passwd openssh-clients openssh-server perl ed m4 sudo rsync epel-release apr-devel bison bzip2-devel cmake3 flex gcc gcc-c++ krb5-devel libcurl-devel libevent-devel libkadm5 libyaml-devel libxml2-devel openssl-devel perl-ExtUtils-Embed python3-devel python3-pip readline-devel xerces-c-devel zlib-devel postgresql postgresql-devel centos-release-scl scl-utils \ 
-        && yum install -y devtoolset-7 libzstd-devel git wget; yum clean all \
+        && yum install -y devtoolset-10 libzstd-devel git wget; yum clean all \
         && cat /tmp/sysctl.conf.add >> /etc/sysctl.conf \
         && cat /tmp/limits.conf.add >> /etc/security/limits.conf \
         && cat /usr/share/zoneinfo/Asia/Shanghai > /etc/localtime \
@@ -35,14 +35,14 @@ RUN echo root:Hashdata@123 | chpasswd \
         && ssh-keygen -A \
         && echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config \
         && localedef --quiet -c -i en_US -f UTF-8 en_US.UTF-8 \
-        && echo 'source scl_source enable devtoolset-7' >> ~/.bashrc \
+        && echo 'source scl_source enable devtoolset-10' >> ~/.bashrc \
         && cd /tmp/ \
         && wget https://www.github.com/greenplum-db/gpdb/archive/refs/heads/main.zip \
         && unzip -d /tmp /tmp/main.zip 
 RUN  cd /tmp/gpdb-main \
-        && pip3 install conan \
-        && pip3 install -r python-dependencies.txt \
-        && source scl_source enable devtoolset-7 \
+        && pip3 install -i https://mirrors.aliyun.com/pypi/simple conan \
+        && pip3 install -i https://mirrors.aliyun.com/pypi/simple -r python-dependencies.txt \
+        && source scl_source enable devtoolset-10 \
         && ./configure --with-perl --with-python --with-libxml --with-gssapi --prefix=/usr/local/greenplum-db \
         && make -j8 \
         && make install
