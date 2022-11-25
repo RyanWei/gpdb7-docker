@@ -1,0 +1,51 @@
+FROM centos:7.9.2009
+RUN (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == \
+systemd-tmpfiles-setup.service ] || rm -f $i; done); \
+rm -f /lib/systemd/system/multi-user.target.wants/*;\
+rm -f /etc/systemd/system/*.wants/*;\
+rm -f /lib/systemd/system/local-fs.target.wants/*; \
+rm -f /lib/systemd/system/sockets.target.wants/*udev*; \
+rm -f /lib/systemd/system/sockets.target.wants/*initctl*; \
+rm -f /lib/systemd/system/basic.target.wants/*;\
+rm -f /lib/systemd/system/anaconda.target.wants/*;
+COPY ./configs/* /tmp/
+RUN echo root:Hashdata@123 | chpasswd \
+        && yum install -y initscripts unzip which tar more less net-tools util-linux-ng passwd openssh-clients openssh-server perl ed m4 sudo rsync epel-release apr-devel bison bzip2-devel cmake3 flex gcc gcc-c++ krb5-devel libcurl-devel libevent-devel libkadm5 libyaml-devel libxml2-devel openssl-devel perl-ExtUtils-Embed python3-devel python3-pip readline-devel xerces-c-devel zlib-devel postgresql postgresql-devel centos-release-scl scl-utils \ 
+        && yum install -y devtoolset-7 libzstd-devel git wget; yum clean all \
+        && cat /tmp/sysctl.conf.add >> /etc/sysctl.conf \
+        && cat /tmp/limits.conf.add >> /etc/security/limits.conf \
+        && cat /usr/share/zoneinfo/Asia/Shanghai > /etc/localtime \
+        && echo "mdw" > /tmp/gpdb-hosts \
+        && echo "/usr/local/lib" >> /etc/ld.so.conf \
+        && echo "/usr/local/lib64" >> /etc/ld.so.conf \
+        && ldconfig \
+        && chmod 777 /tmp/gpinitsystem_singlenode \
+        && chmod 777 /tmp/init_system.sh \
+        && hostname > ~/orig_hostname \
+        && /usr/sbin/groupadd gpadmin \
+        && /usr/sbin/useradd gpadmin -g gpadmin -G wheel \
+        && echo "Hashdata@123"|passwd --stdin gpadmin \
+        && echo "gpadmin        ALL=(ALL)       NOPASSWD: ALL" >> /etc/sudoers \
+        && echo "root        ALL=(ALL)       NOPASSWD: ALL" >> /etc/sudoers \
+        && chown -R gpadmin: /home/gpadmin \
+        && echo "export COORDINATOR_DATA_DIRECTORY=/data0/database/master/gpseg-1" >> /home/gpadmin/.bashrc \
+        && echo "source /usr/local/greenplum-db/greenplum_path.sh" >> /home/gpadmin/.bashrc \
+        && mkdir -p /data0/database/master /data0/database/primary /data0/database/mirror \
+        && chown -R gpadmin: /data0 \
+        && ssh-keygen -A \
+        && echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config \
+        && localedef --quiet -c -i en_US -f UTF-8 en_US.UTF-8 \
+        && echo 'source scl_source enable devtoolset-7' >> ~/.bashrc \
+        && cd /tmp/ \
+        && wget https://www.github.com/greenplum-db/gpdb/archive/refs/heads/main.zip \
+        && unzip -d /tmp /tmp/main.zip 
+RUN  cd /tmp/gpdb-main \
+        && pip3 install conan \
+        && pip3 install -r python-dependencies.txt \
+        && source scl_source enable devtoolset-7 \
+        && ./configure --with-perl --with-python --with-libxml --with-gssapi --prefix=/usr/local/greenplum-db \
+        && make -j8 \
+        && make install
+
+VOLUME [ "/sys/fs/cgroup" ]
+CMD ["bash","-c","/tmp/init_system.sh"]
