@@ -43,7 +43,7 @@ RUN  cd /tmp/gpdb-main \
         && pip3 install -i https://mirrors.aliyun.com/pypi/simple conan \
         && pip3 install -i https://mirrors.aliyun.com/pypi/simple -r python-dependencies.txt \
         && source scl_source enable devtoolset-10 \
-        && ./configure CFLAGS="-O3" --with-perl --with-python --with-libxml --with-gssapi --prefix=/usr/local/greenplum-db \
+        && ./configure --with-perl --with-python --with-libxml --with-gssapi --prefix=/usr/local/greenplum-db \
         && make -j8 \
         && make install
 
