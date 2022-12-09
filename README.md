@@ -1,4 +1,4 @@
-# gpdb7-docker
+# gpdb-docker
 
 Dockerfile for gpdb7 env. 
 
