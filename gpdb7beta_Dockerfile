@@ -36,7 +36,7 @@ RUN     cat /tmp/sysctl.conf.add >> /etc/sysctl.conf \
         && ssh-keygen -A \
         && echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config \
         && localedef --quiet -c -i en_US -f UTF-8 en_US.UTF-8 \
-        && echo 'source scl_source enable devtoolset-10' >> ~/.bashrc
+        && echo 'source scl_source enable devtoolset-11' >> ~/.bashrc
 
 RUN     yum install -y python3-devel python3-pip; yum clean all
 
